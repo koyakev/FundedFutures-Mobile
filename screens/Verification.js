@@ -67,6 +67,7 @@ const Verification = ({ navigation, route }) => {
     const verifyCode = async () => {
         if (code == random) {
             Alert.alert('You are now verified');
+            navigation.popToTop();
 
             try {
                 const docRef = await addDoc(collection(db, 'students'), {
@@ -83,12 +84,12 @@ const Verification = ({ navigation, route }) => {
                     profilePicture: user.filename,
                     isDeactivated: false,
                     dateJoined: new Date().toLocaleDateString(),
+                    applications: 0
                 })
 
                 const imageRef = ref(storage, `${docRef.id}/studProfilePictures/${user.filename}`);
                 await uploadBytes(imageRef, user.blob);
 
-                navigation.navigate('Login');
             } catch (error) {
                 console.error('Error adding user: ', error);
             }

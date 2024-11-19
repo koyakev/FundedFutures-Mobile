@@ -1,76 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, ActivityIndicator, Modal } from 'react-native';
-import { Ionicons, MaterialIcons, FontAwesome, AntDesign } from '@expo/vector-icons';
-import { doc, getDoc, getDocs, query, collection, where, orderBy, updateDoc, addDoc } from 'firebase/firestore';
-import { ref, getDownloadURL, uploadBytes } from 'firebase/storage';
-import { db, storage } from '../firebase/dbConnection';
-import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
-import Navigation from './Navigation';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Platform, FlatList, StatusBar } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { doc, getDoc, query, where, collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase/dbConnection';
 
-export default function Profile({ navigation, route }) {
+export default function ScholarshipDetails({ navigation, route }) {
     const { id } = route.params;
+    const {valid} = route.params;
     const [user, setUser] = useState(null);
-    const [applications, setApplications] = useState([]);
-    const [offerDetails, setOfferDetails] = useState([]);
-    const [imageUri, setImageUri] = useState(null);
-    const [image, setImage] = useState(null);
-    const [visible, setVisible] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [updatePic, setUpdatePic] = useState(false);
-
-    const pickImage = async () => {
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.All,
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 1,
-        });
-
-        if (!result.canceled) {
-            setImage(result.assets[0].uri);
-        }
-    }
+    const [organization, setOrg] = useState(null);
+    const { offerId } = route.params;
+    const [offer, setOffer] = useState(null);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                setLoading(true);
                 const userDoc = await getDoc(doc(db, 'students', id));
                 setUser(userDoc.data());
 
-                const applicationsList = await getDocs(query(collection(db, 'enrollments'), where('userId', '==', id)));
-                setApplications(applicationsList.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data()
-                })))
-
-                const offerDetailsArray = [];
-
-                for (const application of applicationsList.docs) {
-                    try {
-                        const offerDoc = await getDoc(query(doc(db, 'scholarships', application.data().offerId)));
-                        
-                        const offerGrantor = await getDocs(query(collection(db, 'organization'), where('orgEmail', '==', offerDoc.data().createdBy)));
-                        offerGrantor.forEach(grantor => {
-                            offerDetailsArray.push({
-                                id: offerDoc.id,
-                                ...offerDoc.data(),
-                                ...grantor.data(),
-                                ...application.data(),
-                            });
-                        })
-                        
-                    } catch (error) {
-                        console.error('Error fetching documents: ', error);
-                    }
-                }
-                
-                setLoading(false);
-                setOfferDetails(offerDetailsArray);
-
+                const offerDoc = await getDoc(doc(db, 'scholarships', offerId));
+                setOffer(offerDoc.data());
             } catch (error) {
-                console.error('Error fetching data: ', error)
+                console.error('Error fetching data: ', error);
             }
         }
 
@@ -78,230 +29,127 @@ export default function Profile({ navigation, route }) {
     }, [id])
 
     useEffect(() => {
-        const fetchProfilePicture = async () => {
-            if (!user) return;
 
-            try {
-                const imageRef = ref(storage, `${id}/studProfilePictures/${user.profilePicture}`);
-
-                const url = await getDownloadURL(imageRef);
-                setImageUri(url);
-            } catch (error) {
-                console.error('Error: ', error);
+        const fetchData = async () => {
+            if (offer && offer.createdBy) {
+                try {
+                    const org = await getDocs(query(collection(db, 'organization'), where('orgEmail', '==', offer.createdBy)));
+                    setOrg(org.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data(),
+                    })));
+                } catch (error) {
+                    console.error('Error fetching document: ', error);
+                }
             }
         }
-        fetchProfilePicture();
-    }, [user]);
-
-    const changeProfilePicture = async() => {
-        try {
-            setUpdatePic(true);
-            const { uri } = await FileSystem.getInfoAsync(image);
-                const blob = await new Promise((resolve, reject) => {
-                    const xhr = new XMLHttpRequest();
-                    xhr.onload = () => {
-                        resolve(xhr.response);
-                    };
-                    xhr.onerror = (e) => {
-                        reject(new TypeError('Network request failed'));
-                    };
-                    xhr.responseType = 'blob';
-                    xhr.open('GET', uri, true);
-                    xhr.send(null);
-                });
-
-                const filename = image.substring(image.lastIndexOf('/') + 1);
-                const imageRef = ref(storage, `${id}/studProfilePictures/${filename}`);
-
-                await uploadBytes(imageRef, blob);
-
-                await updateDoc(doc(db, 'students', id), {
-                    profilePicture: filename
-                });
-
-                const userlog = await addDoc(collection(db, 'logs'), {
-                    activity: 'Updated profile picture',
-                    userId: id,
-                    timestamp: new Date(),
-                });
-
-                setImage(null);
-                setVisible(false);
-                navigation.goBack();
-                navigation.navigate('Profile', {id: id});
-                setUpdatePic(false);
-        } catch(error) {
-            console.error('Error updating profile picture: ', error);
-        }
-    }
+        fetchData();
+    }, [offer])
 
     return (
-        <View style={styles.container}>
-            {user ? (
-                <>
-                    <View style={styles.header}>
-                        <View style={styles.profileContainer}>
-                            {imageUri && (
-                                <TouchableOpacity onPress={() => setVisible(true)}>
-                                    <Image
-                                        source={{ uri: imageUri }}
-                                        style={styles.profileImage}
-                                        resizeMode="cover"
-                                    />
-                                </TouchableOpacity>
-                            )
-                            }
-                            <View style={styles.profileDetails}>
-                                <Text style={styles.profileName}>{user.firstname} {user.lastname}</Text>
-                                <Text style={styles.profileEmail}>{user.email}</Text>
-                                <Text style={styles.profileContact}>{user.username}</Text>
-                            </View>
-                        </View>
-                        <View style={styles.icons}>
+        <>
+            {
+                offer ? (
+
+                    <View key={offer.id} style={styles.container} >
+
+                        <StatusBar barStyle="light-content" backgroundColor="#4D4D4D" />
+
+                        <View style={styles.header}>
                             <TouchableOpacity
-                                onPress={() => navigation.navigate('History', {id: id})}
+                                onPress={() => navigation.goBack()}
                             >
-                                <MaterialIcons name="history" size={30} color="#F7D66A" />
+                                <Ionicons name="arrow-back" size={24} color="#F7D66A" />
                             </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={() => navigation.navigate('EditProfile', { id: id })}
-                            >
-                                <FontAwesome name="edit" size={30} color="#F7D66A" />
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-
-                </>
-            ) : (
-                <View style={styles.loading}>
-                    <ActivityIndicator
-                        size="large"
-                        color="#F7D66A"
-                    />
-                </View>
-            )}
-
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={visible}
-                onRequestClose={() => setVisible(false)}
-            >
-                <View style={styles.changePicture}>
-                            {!image ? (
-                                <>
-                                    <Image
-                                        source={{ uri: imageUri }}
-                                        style={{ width: 150, height: 150, borderRadius: 100}}
-                                        resizeMode="cover"
-                                    />
-                                    <View></View>
-                                    <TouchableOpacity
-                                        style={styles.imageUpload}
-                                        onPress={pickImage}
-                                    >
-                                        <AntDesign name="plus" size={24} color="#555455" />
-                                        <Text>Upload ID</Text>
-                                        
-                                    </TouchableOpacity>
-                                </>
-                            ) : (
-                                <>
-                                    <Image
-                                        source={{ uri: image }}
-                                        style={{ width: 150, height: 150, borderRadius: 100}}
-                                        resizeMode="cover"
-                                    />
-                                    <TouchableOpacity
-                                        style={styles.imageUpload}
-                                        onPress={pickImage}
-                                        >
-                                        <AntDesign name="plus" size={24} color="#555455" />
-                                        <Text>Select New ID Image</Text>
-                                    </TouchableOpacity>
-                                    <View style={styles.changePictureButton}>
-
-                                    {!updatePic ? (
-                                        <TouchableOpacity
-                                            onPress={changeProfilePicture}
-                                        >
-                                            <Text>Change Picture</Text>
-                                        </TouchableOpacity>
-                                    ) : (
-                                        <ActivityIndicator
-                                            size="small"
-                                            color="#4D4D4D"
-                                            />
-                                        )}
-                                    </View>
-                                </>
-                            )}
-                </View>
-            </Modal>
-
-            <ScrollView contentContainerStyle={styles.contentContainer}>
-                <View style={styles.scholarshipContainer}>
-                    {!loading ? (
-                        offerDetails.length > 0 ? (
-                            offerDetails.map((offer) => (
-                                <View key={offer.id} style={styles.scholarshipItem}>
-                                    <View style={styles.scholarshipDetails}>
-                                        <Text style={styles.institutionName}>{offer.orgName}</Text>
-                                        <Text style={styles.scholarshipName}>{offer.programName}</Text>
-                                    </View>
-                                    <View style={styles.progressContainer}>
-                                        {offer.status == 'Approved' ? (
-                                            <View style={[styles.progressBarContainer, { backgroundColor: '#4CAF50' }]}>
-                                                <Text style={[styles.progressText, {color: 'white'}]}>{offer.status}</Text>
-                                            </View>
-                                        ) : offer.status == 'Processing' ? (
-                                            <View style={[styles.progressBarContainer, { backgroundColor: '#FFA500' }]}>
-                                                <Text style={[styles.progressText, { color: 'white' }]}>{offer.status}</Text>
-                                            </View>
-                                        ) : offer.status == 'Pending' ? (
-                                            <View style={[styles.progressBarContainer, { backgroundColor: '#FF4D4D' }]}>
-                                                <Text style={[styles.progressText, { color: 'white' }]}>{offer.status}</Text>
-                                            </View>
-                                        ) : (
-                                            <View style={[styles.progressBarContainer, { backgroundColor: '#B0B0B0' }]}>
-                                                <Text style={styles.progressText}>{offer.status}</Text>
-                                            </View>
-                                        )}
-                                    </View>
-                                    <View style={styles.remarks}>
-                                        <Text style={styles.remarksTitle}>Remarks:</Text>
-                                        <View style={styles.remarksContainer}>
-                                            <Text>{offer.remarks}</Text>
-                                        </View>
+                            <View style={styles.titleContainer}>
+                                <View style={styles.titleContainer}>
+                                    <Text style={styles.title}>{offer.programName}</Text>
+                                    <View style={styles.externalBadge}>
+                                        <Text style={styles.externalText}>{offer.programType}</Text>
                                     </View>
                                 </View>
-                            ))
-                        ) : (
-                            <View>
-                                <Text>No scholarships available.</Text>
-                                <TouchableOpacity
-                                    onPress={() => navigation.navigate('FilteredOffersList', {id: id})}
-                                    style={{ marginTop: 10 }}
-                                >
-                                    <Text style={styles.apply}>Click here to start applying now.</Text>
-                                </TouchableOpacity>
-                                
+                                <View style={styles.headerIcons}>
+                                    <TouchableOpacity>
+                                        <Ionicons name="help-circle-outline" size={24} color="#F7D66A" />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity>
+                                        <Ionicons name="notifications" size={24} color="#F7D66A" />
+                                    </TouchableOpacity>
+                                </View>
                             </View>
-                        )
-                        
-                    ) : (
-                        <View style={styles.loading}>
-                            <ActivityIndicator
-                                size="large"
-                                color="#4D4D4D"
-                            />
                         </View>
-                    )}
-                </View>
-            </ScrollView>
+                        <View style={styles.grantor}>
+                            {organization && (
+                                organization.map(org => (
+                                    <TouchableOpacity
+                                        key={org.id}
+                                        onPress={() => navigation.navigate('Details', { id: id, institute: org.id })}
+                                    >
+                                        <Text style={styles.grantorName}>{org.orgName}</Text>
+                                    </TouchableOpacity>
+                                ))
+                            )}
+                        </View>
 
-            <Navigation navigation={navigation} id={id} />
-        </View>
+                        <View style={styles.availableSlotsContainer}>
+                            <Text style={styles.availableSlotsText}>Available Slots:</Text>
+                            <Text style={styles.availableSlotsValue}>{offer.applied} / {offer.slots}</Text>
+                        </View>
+
+                        <View style={styles.contentContainer}>
+                            <View style={styles.sectionContainer}>
+                                <Text style={styles.sectionTitle}>Priority Courses:</Text>
+                                <FlatList
+                                    data={offer.courses}
+                                    keyExtractor={(item, index) => index.toString()}
+                                    contentContainerStyle={styles.section}
+                                    renderItem={({ item }) => (
+                                        <Text style={styles.bulletPoint}>• {item}</Text>
+                                    )}
+                                />
+                            </View>
+
+                            <View style={styles.sectionContainer}>
+                                <Text style={styles.sectionTitle}>Benefits:</Text>
+                                <FlatList
+                                    data={offer.benefits}
+                                    keyExtractor={(item, index) => index.toString()}
+                                    contentContainerStyle={styles.section}
+                                    renderItem={({ item }) => (
+                                        <Text style={styles.bulletPoint}>• {item}</Text>
+                                    )}
+                                />
+                            </View>
+
+                            <View style={styles.sectionContainer}>
+                                <Text style={styles.sectionTitle}>Requirements:</Text>
+                                <FlatList
+                                    data={offer.requirements}
+                                    keyExtractor={(item, index) => index.toString()}
+                                    contentContainerStyle={styles.section}
+                                    renderItem={({ item }) => (
+                                        <Text style={styles.bulletPoint}>• {item}</Text>
+                                    )}
+                                />
+                            </View>
+                        </View>
+
+                        {user.applications < 2 && valid == true && (
+                            <TouchableOpacity style={styles.applyButton} onPress={() => navigation.navigate("Application", { id: id, offerId: offerId })}>
+                                <Text style={styles.applyButtonText}>Apply Now</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                ) : (
+                    <View style={styles.loading}>
+                        <ActivityIndicator
+                            size="large"
+                            color="#F7D66A"
+                        />
+                    </View>
+                )
+            }
+        </>
     )
 }
 
@@ -309,157 +157,114 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#4D4D4D',
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     },
     header: {
-        padding: 15,
-        backgroundColor: '#4D4D4D',
-        marginTop: 30,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        paddingVertical: 8,
+        paddingHorizontal: 10,
+        backgroundColor: '#4D4D4D',
     },
-    profileContainer: {
+    titleContainer: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
     },
-    profileImage: {
+    title: {
+        color: '#F7D66A',
+        fontSize: 16,
+        width: 200,
+        fontWeight: 'bold',
+        textAlign: 'center',
+    },
+    externalBadge: {
+        backgroundColor: '#C4C4C4',
+        borderRadius: 5,
+        paddingVertical: 2,
+        paddingHorizontal: 8,
+        marginLeft: 8,
+    },
+    externalText: {
+        color: '#4D4D4D',
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
+    headerIcons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
         width: 60,
-        height: 60,
-        backgroundColor: '#E6D3A3',
+    },
+    availableSlotsContainer: {
+        flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        borderRadius: 30
+        backgroundColor: '#4D4D4D',
+        paddingVertical: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F7D66A',
     },
-    profileDetails: {
-        marginLeft: 10,
-    },
-    detailsContainer: {
-        flexDirection: 'row'
-    },
-    profileName: {
-        fontSize: 18,
+    availableSlotsText: {
+        color: '#FFFFFF',
+        fontSize: 14,
         fontWeight: 'bold',
-        color: '#FFFFFF',
+        marginRight: 5,
     },
-    profileStatus: {
+    availableSlotsValue: {
+        color: '#00FF00',
         fontSize: 14,
-        color: '#FFD700',
-    },
-    profileEmail: {
-        fontSize: 14,
-        color: '#FFFFFF',
-    },
-    profileContact: {
-        fontSize: 14,
-        color: '#FFFFFF',
-    },
-    notificationButton: {
-        padding: 10,
+        fontWeight: 'bold',
     },
     contentContainer: {
-        paddingHorizontal: 15,
-        paddingBottom: 20,
-    },
-    scholarshipContainer: {
-        backgroundColor: '#E6D3A3',
-        borderRadius: 15,
-        padding: 15,
-        elevation: 10,
-    },
-    scholarshipItem: {
-        backgroundColor: '#4D4D4D',
-        borderRadius: 15,
-        padding: 15,
-        marginBottom: 15,
-        elevation: 10,
-    },
-    scholarshipDetails: {
         flex: 1,
-    },
-    institutionName: {
-        fontSize: 16,
-        color: '#FFD700'
-    },
-    scholarshipName: {
-        fontSize: 14,
-        color: '#CCCCCC'
-    },
-    progressContainer: {
+        paddingHorizontal: 10,
+        paddingBottom: 20,
         marginTop: 10,
     },
-    progressText: {
+    sectionContainer: {
+        flex: 1,
+        backgroundColor: '#F7D66A',
+        borderRadius: 15,
+        padding: 10,
+        marginBottom: 15,
+    },
+    sectionTitle: {
         fontSize: 14,
+        fontWeight: 'bold',
+        color: '#4D4D4D',
+        marginBottom: 8,
     },
-    progressBarContainer: {
-        borderRadius: 5,
-        overflow: 'hidden',
-        marginTop: 5,
-        justifyContent: 'center',
-        alignItems: 'center'
+    bulletPoint: {
+        fontSize: 12,
+        color: '#4D4D4D',
+        marginBottom: 4,
     },
-
+    applyButton: {
+        backgroundColor: '#333333',
+        paddingVertical: 12,
+        borderRadius: 20,
+        marginHorizontal: 10,
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    applyButtonText: {
+        color: '#F7D66A',
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
     loading: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
     },
-
-    nav: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        padding: 15,
-        marginLeft: 20,
-        marginRight: 20,
-        borderTopWidth: 1,
-        borderTopColor: 'gray',
-        borderTopStyle: 'solid'
-    },
-    apply: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        fontStyle: 'italic',
-        textDecorationLine: 'underline',
-    },
-    changePicture: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.4)',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    imageUpload: {
-        flexDirection: 'row',
-        marginTop: 20,
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 14,
-        borderRadius: 20,
-        backgroundColor: '#FADEAD',
-        elevation: 5
-    },
-    changePictureButton: {
-        marginTop: 10,
-        padding: 14,
+    grantor: {
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#FADEAD',
-        borderRadius: 20,
-        elevation: 5
+        marginBottom: 20,
     },
-    icons: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        width: 80,
-    },
-    remarks: {
-        marginTop: 10
-    },
-    remarksTitle: {
-        color: '#CCCCCC'
-    },
-    remarksContainer: {
-        backgroundColor: '#FFFFFF',
-        padding: 10,
-        borderRadius: 10,
+    grantorName: {
+        color: '#F7D66A',
     }
 });

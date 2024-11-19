@@ -21,7 +21,7 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <NavigationContainer>
+    <NavigationContainer style={styles.container}>
       <Stack.Navigator screenOptions={{ headerShown: false }} >
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="EditProfile" component={EditProfile} />
@@ -41,6 +41,10 @@ export default function App() {
   );
 }
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  }
+});
 
 registerRootComponent(App);
