@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, View, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl, Modal, Pressable, Alert } from 'react-native';
+import { ScrollView, View, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl, Modal, Pressable, Alert, StatusBar } from 'react-native';
 import { doc, getDoc, collection, getDocs, addDoc, query, where, orderBy } from 'firebase/firestore';
 import { db } from '../firebase/dbConnection';
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
@@ -39,6 +39,7 @@ export default function Dashboard({ navigation, route }) {
 
     return (
         <View style={styles.container}>
+            <StatusBar barStyle="light-content" backgroundColor="#4D4D4D" />
             {!loading ? (
                 <ScrollView contentContainerStyle={styles.contentContainer}>
                 <View style={styles.titleContainer}>
@@ -134,7 +135,6 @@ const styles = StyleSheet.create({
     contentContainer: {
         paddingHorizontal: 15,
         paddingBottom: 20,
-        marginTop: 30
     },
     scholarshipContainer: {
         backgroundColor: '#E6D3A3',

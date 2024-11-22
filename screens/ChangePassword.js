@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, Image, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, Image, ActivityIndicator, StatusBar } from 'react-native';
 import axios from 'axios';
 import { updateDoc, getDocs, doc, query, collection, where, addDoc } from 'firebase/firestore';
 import { db } from '../firebase/dbConnection';
@@ -151,6 +151,9 @@ export default function ChangePassword({ navigation, route }) {
 
     return (
         <View style={styles.container}>
+
+            <StatusBar barStyle="light-content" backgroundColor="#4D4D4D" />
+
             <View style={styles.logoContainer}>
                 <Image source={require('../assets/STUDENT.png')} style={styles.logo} />
             </View>

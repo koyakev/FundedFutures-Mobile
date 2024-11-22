@@ -68,14 +68,14 @@ export default function ScholarshipDetails({ navigation, route }) {
                                         <Text style={styles.externalText}>{offer.programType}</Text>
                                     </View>
                                 </View>
-                                <View style={styles.headerIcons}>
+                                {/* <View style={styles.headerIcons}>
                                     <TouchableOpacity>
                                         <Ionicons name="help-circle-outline" size={24} color="#F7D66A" />
                                     </TouchableOpacity>
                                     <TouchableOpacity>
                                         <Ionicons name="notifications" size={24} color="#F7D66A" />
                                     </TouchableOpacity>
-                                </View>
+                                </View> */}
                             </View>
                         </View>
                         <View style={styles.grantor}>
@@ -163,7 +163,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: 8,
         paddingHorizontal: 10,
         backgroundColor: '#4D4D4D',
     },

@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {ScrollView, View, Text, StyleSheet, TouchableOpacity} from'react-native';
+import {ScrollView, View, Text, StyleSheet, TouchableOpacity, StatusBar} from'react-native';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import {getDocs, collection, query, where, orderBy} from 'firebase/firestore';
 import {db} from '../firebase/dbConnection';
@@ -28,6 +28,8 @@ export default function Dashboard({ navigation, route }) {
 
     return (
         <View style={styles.container}>
+            <StatusBar barStyle="light-content" backgroundColor="#4D4D4D" />
+
             <View style={styles.header}>
                 <TouchableOpacity
                     onPress={() => navigation.goBack()}
@@ -59,7 +61,6 @@ const styles = StyleSheet.create({
     },
     header: {
         flexDirection: 'row',
-        marginTop: 40,
         marginHorizontal: 10,
         alignItems: 'center',
     },

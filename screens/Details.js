@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, StatusBar } from 'react-native';
 import { doc, collection, getDoc, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebase/dbConnection';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
@@ -34,6 +34,8 @@ export default function Details({ navigation, route }) {
 
     return (
         <View style={styles.container}>
+            <StatusBar barStyle="light-content" backgroundColor="#4D4D4D" />
+
             <TouchableOpacity style={styles.backButtonContainer} onPress={() => navigation.goBack()}>
                 <Ionicons name="arrow-back" size={28} color="#FFD700" />
             </TouchableOpacity>
@@ -50,14 +52,14 @@ export default function Details({ navigation, route }) {
                     <ScrollView contentContainerStyle={styles.contentContainer}>
                         <View style={styles.titleContainer}>
                             <Text style={styles.title}>List of Scholarship Programs</Text>
-                            <View style={styles.headerIcons}>
+                            {/* <View style={styles.headerIcons}>
                                 <TouchableOpacity>
                                     <Ionicons name="help-circle-outline" size={28} color="#F7D66A" />
                                 </TouchableOpacity>
                                 <TouchableOpacity>
                                     <MaterialIcons name="notifications" size={28} color="#F7D66A" />
                                 </TouchableOpacity>
-                            </View>
+                            </View> */}
                         </View>
 
                         <View style={styles.scholarshipContainer}>
@@ -111,7 +113,6 @@ const styles = StyleSheet.create({
     },
     backButtonContainer: {
         position: 'absolute',
-        marginTop: 20,
         top: 20,
         left: 15,
         zIndex: 1,

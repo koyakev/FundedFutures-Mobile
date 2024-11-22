@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, Image, Pressable, Alert, ActivityIndicator, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TextInput, Image, Pressable, Alert, ActivityIndicator, Modal, StatusBar } from 'react-native';
 import { collection, getDocs, query, where, addDoc } from 'firebase/firestore';
 import { db } from '../firebase/dbConnection';
 
@@ -24,9 +24,8 @@ export default function Login({ navigation }) {
                 Alert.alert('Error!', 'Your account is deactivated. Please contact admin at 0967340251X');
             } else {
                 addLog(id);
-                navigation.navigate('Dashboard', { id: id });
+                navigation.replace('Dashboard', { id: id });
                 Alert.alert('Welcome!', `Hello ${doc.data().username}`);
-
             }
         })
 
@@ -62,6 +61,7 @@ export default function Login({ navigation }) {
 
     return (
         <View style={styles.container}>
+            <StatusBar barStyle="light-content" backgroundColor="#4D4D4D" />
             <View style={styles.login}>
                 <Image
                     style={styles.logo}
@@ -125,7 +125,7 @@ export default function Login({ navigation }) {
                 </Modal>
 
             </View>
-        </View >
+        </View>
     )
 }
 

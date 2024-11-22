@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, Button, Alert, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Button, Alert, Image, TouchableOpacity, StatusBar } from 'react-native';
 import axios from 'axios';
 import { db, storage } from '../firebase/dbConnection';
 import { addDoc, collection } from 'firebase/firestore';
@@ -101,6 +101,7 @@ const Verification = ({ navigation, route }) => {
 
     return (
         <View style={styles.container}>
+            <StatusBar barStyle="light-content" backgroundColor="#4D4D4D" />
             <View style={styles.logoContainer}>
                 <Image style={styles.logo} source={require('../assets/STUDENT.png')} />
             </View>

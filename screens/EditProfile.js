@@ -215,6 +215,8 @@ export default function EditProfile({ navigation, route }) {
 
     return (
         <View style={styles.container}>
+            <StatusBar barStyle="light-content" backgroundColor="#4D4D4D" />
+
             {user && (
                 <>
                     {schools ? (
@@ -406,7 +408,6 @@ const styles = StyleSheet.create({
         backgroundColor: "#555455"
     },
     header: {
-        marginTop: 10,
         padding: 40,
         paddingBottom: 0,
         flexDirection: 'row',

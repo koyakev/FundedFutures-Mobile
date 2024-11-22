@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, View, Text, Pressable, StyleSheet, TextInput, Alert, ActivityIndicator, TouchableOpacity, Modal } from 'react-native';
+import { ScrollView, View, Text, Pressable, StyleSheet, TextInput, Alert, ActivityIndicator, TouchableOpacity, Modal, StatusBar } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { SelectList } from 'react-native-dropdown-select-list';
@@ -51,7 +51,7 @@ export default function SignupStudent({ navigation }) {
 
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.All,
+            mediaTypes: ImagePicker.MediaType,
             allowsEditing: true,
             aspect: [4, 3],
             quality: 1,
@@ -73,7 +73,7 @@ export default function SignupStudent({ navigation }) {
     }
 
     const checkPassword = (insertedPassword) => {
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&,])[A-Za-z\d@$!%*?&,]{8,}$/;
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&,.])[A-Za-z\d@$!%*?&,]{8,}$/;
         return passwordRegex.test(insertedPassword);
     }
 
@@ -173,6 +173,7 @@ export default function SignupStudent({ navigation }) {
 
     return (
         <View style={styles.container}>
+            <StatusBar barStyle="light-content" backgroundColor="#4D4D4D" />
             {schools ? (
                 <ScrollView>
                     <View style={styles.header}>
@@ -204,6 +205,7 @@ export default function SignupStudent({ navigation }) {
                                 setSelected={(value) => setSchool(value)}
                                 data={schools.schools}
                                 boxStyles={[styles.input, { marginBottom: 0 }]}
+                                search={false}
                             />
                         </View>
 
@@ -213,6 +215,7 @@ export default function SignupStudent({ navigation }) {
                                 setSelected={(value) => setProgram(value)}
                                 data={schools.courses}
                                 boxStyles={[styles.input, { marginBottom: 0 }]}
+                                search={false}
                             />
                         </View>
 
@@ -270,10 +273,11 @@ export default function SignupStudent({ navigation }) {
                                     ]}
                                     save='value'
                                     boxStyles={styles.gender}
+                                    search={false}
                                 />
                             </View>
                         </View>
-                        <View style={[styles.input, { flexDirection: 'row', justifyContent: 'space-between' }]}>
+                        <View style={[styles.input, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'  }]}>
                             <TextInput
                                 placeholder="Password"
                                 style={{ flex: 1 }}
@@ -287,7 +291,7 @@ export default function SignupStudent({ navigation }) {
                                 <AntDesign name="eye" size={24} color="#333333" />
                             </TouchableOpacity>
                         </View>
-                        <View style={[styles.input, { flexDirection: 'row', justifyContent: 'space-between' }]}>
+                        <View style={[styles.input, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
                             <TextInput
                                 placeholder="Confirm Password"
                                 style={{ flex: 1 }}
@@ -303,7 +307,7 @@ export default function SignupStudent({ navigation }) {
                         </View>
                         <Text
                             style={[styles.label, { fontSize: 16, color: '#B7A92A' }]}
-                        >* One lowercased character{"\n"}* One uppercased character{"\n"}* One number{"\n"}* One special character</Text>
+                        >* 8 characters{"\n"}* One lowercased character{"\n"}* One uppercased character{"\n"}* One number{"\n"}* One special character</Text>
                         <View>
                             {!image ? (
                                 <TouchableOpacity
@@ -319,12 +323,12 @@ export default function SignupStudent({ navigation }) {
                                     onPress={pickImage}
                                 >
                                     <AntDesign name="plus" size={24} color="#555455" />
-                                    <Text>Select New Profile Picture</Text>
+                                    <Text style={{ fontWeight: 'bold' }}>Select New Profile Picture</Text>
                                 </TouchableOpacity>
                             )}
                         </View>
                         <Pressable style={styles.continue} onPress={() => setVisible(true)}>
-                            <Text style={styles.continueText}>Sign In</Text>
+                            <Text style={styles.continueText}>Sign Up</Text>
                         </Pressable>
                         
                     </View>
@@ -350,10 +354,13 @@ export default function SignupStudent({ navigation }) {
                         <Text style={styles.modalTextContent}>
                             By checking this box, I confirm that I have read and agree to the terms outlined in the Privacy Policy, including the collection, use, and sharing of my personal data as required by the Data Privacy Act of 2012. I understand my rights regarding data access, correction, and deletion.
                         </Text>
-                        <View style={styles.agree}>
+                        <Pressable
+                            onPress={() => setAgreement(!agreement)}
+                            style={styles.agree}
+                        >
                             <Checkbox value={agreement} onValueChange={() => setAgreement(!agreement)} />
                             <Text style={styles.agreeText}>I agree to the privacy policy agreement</Text>
-                        </View>
+                        </Pressable>
                         {!loading ? (
                             agreement ? (
                                 <TouchableOpacity style={styles.agreed} onPress={addStudent}>
@@ -442,9 +449,10 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     imageUpload: {
+        flexDirection: 'row',
         marginTop: 20,
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'space-evenly',
         padding: 14,
         borderRadius: 20,
         backgroundColor: '#FADEAD',
@@ -486,7 +494,9 @@ const styles = StyleSheet.create({
     agree: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 10
+        justifyContent: 'center',
+        marginBottom: 10,
+        marginLeft: 1,
     },
     agreeText: {
         padding: 10,

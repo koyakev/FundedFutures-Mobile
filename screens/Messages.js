@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Modal, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Modal, TouchableOpacity, StatusBar } from 'react-native';
 import Navigation from './Navigation';
 import { collection, getDoc, getDocs, doc, query, where, deleteDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/dbConnection';
@@ -48,7 +48,10 @@ export default function Messages({ navigation, route }) {
     const openMessage = async (idtoEdit) => {
         try {
             const message = await getDoc(doc(db, 'messages', idtoEdit));
-            setMessageContents(message.data());
+            setMessageContents({
+                id: message.id,
+                ...message.data()
+            });
 
             console.log(messageContents);
 
@@ -64,6 +67,7 @@ export default function Messages({ navigation, route }) {
 
     return (
         <View style={styles.container}>
+            <StatusBar barStyle="light-content" backgroundColor="#4D4D4D" />
             {user ? (
                 <View style={styles.username}>
                     <Text style={styles.usernameText}>{user.username}'s Messages</Text>
@@ -174,9 +178,17 @@ export default function Messages({ navigation, route }) {
                                 {messageContents.body}
                             </Text>
                         </ScrollView>
+                        {messageContents.offerId && (
+                            <TouchableOpacity
+                                style={[styles.deleteButton, { backgroundColor: 'lightgray', marginBottom: 10}]}
+                                onPress={() => navigation.navigate('Application', {id: id, offerId: messageContents.offerId})}
+                            >
+                                <Text>Fulfill Requirements</Text>
+                            </TouchableOpacity>
+                        )}
                         <TouchableOpacity
                             style={styles.deleteButton}
-                            //onPress={() => deleteMessage(messageContents.id)}
+                            onPress={() => deleteMessage(messageContents.id)}
                         >
                             <Text style={styles.deleteButtonText}>Delete Message</Text>
                         </TouchableOpacity>
@@ -200,7 +212,6 @@ const styles = StyleSheet.create({
     },
     username: {
         padding: 15,
-        marginTop: 40,
     },
     usernameText: {
         color: 'white',
@@ -233,9 +244,8 @@ const styles = StyleSheet.create({
     },
     contentContainer: {
         flex: 1,
-        flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
+        alignItems: 'left',
     },
     sender: {
         color: 'white',

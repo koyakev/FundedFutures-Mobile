@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, ActivityIndicator, Modal } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, ActivityIndicator, StatusBar, Modal, Pressable } from 'react-native';
 import { Ionicons, MaterialIcons, FontAwesome, AntDesign } from '@expo/vector-icons';
 import { doc, getDoc, getDocs, query, collection, where, orderBy, updateDoc, addDoc } from 'firebase/firestore';
 import { ref, getDownloadURL, uploadBytes } from 'firebase/storage';
@@ -18,10 +18,11 @@ export default function Profile({ navigation, route }) {
     const [visible, setVisible] = useState(false);
     const [loading, setLoading] = useState(false);
     const [updatePic, setUpdatePic] = useState(false);
+    const [remarks, setRemarks] = useState(false);
 
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.All,
+            mediaTypes: ImagePicker.MediaType,
             allowsEditing: true,
             aspect: [4, 3],
             quality: 1,
@@ -137,6 +138,7 @@ export default function Profile({ navigation, route }) {
 
     return (
         <View style={styles.container}>
+            <StatusBar barStyle="light-content" backgroundColor="#4D4D4D" />
             {user ? (
                 <>
                     <View style={styles.header}>
@@ -180,6 +182,7 @@ export default function Profile({ navigation, route }) {
                     />
                 </View>
             )}
+
 
             <Modal
                 animationType="slide"
@@ -268,12 +271,28 @@ export default function Profile({ navigation, route }) {
                                             </View>
                                         )}
                                     </View>
+                                    {!offer.remark == '' && (
                                     <View style={styles.remarks}>
-                                        <Text style={styles.remarksTitle}>Remarks:</Text>
-                                        <View style={styles.remarksContainer}>
-                                            <Text>{offer.remarks}</Text>
-                                        </View>
+                                        <Pressable
+                                            onPress={() => setRemarks(!remarks)}
+                                        >
+                                            <Text style={styles.remarksTitle}>View Remarks</Text>
+                                        </Pressable>
+                                        <Modal
+                                            animationType="slide"
+                                            transparent={true}
+                                            visible={remarks}
+                                            onRequestClose={() => setRemarks(!remarks)}
+                                        >
+                                            <View style={styles.centeredView}>
+                                                <View style={styles.modalView}>
+                                                    <Text>Remark:</Text>
+                                                    <Text>{offer.remark}</Text>
+                                                </View>
+                                            </View>
+                                        </Modal>
                                     </View>
+                                    )}
                                 </View>
                             ))
                         ) : (
@@ -313,7 +332,6 @@ const styles = StyleSheet.create({
     header: {
         padding: 15,
         backgroundColor: '#4D4D4D',
-        marginTop: 30,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -461,5 +479,23 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFFFFF',
         padding: 10,
         borderRadius: 10,
-    }
+    },
+    centeredView: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    },
+    modalView: {
+        width: 300,
+        backgroundColor: 'white',
+        borderRadius: 10,
+        padding: 20,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 10,
+    },
 });

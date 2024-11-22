@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Pressable, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, Pressable, Alert, ActivityIndicator, StatusBar } from 'react-native';
 import { doc, getDoc, getDocs, addDoc, collection, query, where, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes } from 'firebase/storage';
 import { db, storage } from '../firebase/dbConnection';
@@ -85,7 +85,8 @@ const Application = ({ navigation, route }) => {
                     userId: id,
                     offerId: offerId,
                     status: 'Pending',
-                    dateApplied: new Date().toLocaleDateString()
+                    dateApplied: new Date().toLocaleDateString(),
+                    remark: '',
                 });
 
                 await updateDoc(doc(db, 'scholarships', offerId), {
@@ -96,12 +97,13 @@ const Application = ({ navigation, route }) => {
                     applications: user.applications + 1,
                 })
 
+                navigation.popToTop();
                 navigation.navigate('Profile', { id: id });
                 setUploading(false);
                 Alert.alert('Documents Uploaded');
                 setDocuments([]);
             } else {
-                Alert.alert('Invalid Application');
+                Alert.alert('Invalid Application', 'You seem to have already applied to this scholarship.');
                 navigation.navigate('Profile', { id: id });
             }
 
@@ -114,6 +116,8 @@ const Application = ({ navigation, route }) => {
 
     return (
         <View style={styles.container}>
+
+            <StatusBar barStyle="light-content" backgroundColor="#4D4D4D" />
 
             <Pressable
                 onPress={() => navigation.goBack()}

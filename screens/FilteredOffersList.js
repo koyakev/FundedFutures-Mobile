@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, View, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator, Modal, Pressable, Alert } from 'react-native';
+import { ScrollView, View, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator, Modal, Pressable, Alert, StatusBar } from 'react-native';
 import { doc, getDoc, collection, getDocs, addDoc, query, where } from 'firebase/firestore';
 import { db } from '../firebase/dbConnection';
 import { Ionicons, MaterialIcons, FontAwesome5, AntDesign } from '@expo/vector-icons';
@@ -164,6 +164,7 @@ export default function FilteredOffersList ({ navigation, route }) {
 
     return (
         <View style={styles.container}>
+            <StatusBar barStyle="light-content" backgroundColor="#4D4D4D" />
 
             <ScrollView contentContainerStyle={styles.contentContainer}>
                 <View style={styles.titleContainer}>
@@ -231,24 +232,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginLeft: 20,
     },
-    searchContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginLeft: 15,
-        marginRight: 15,
-        marginTop: 40,
-        paddingHorizontal: 15,
-        backgroundColor: '#FFFFFF',
-        borderRadius: 25
-    },
-    searchBar: {
-        flex: 1,
-        height: 40
-    },
-    searchIcon: {
-
-    },
     title: {
         fontSize: 20,
         fontWeight: 'bold',
@@ -263,7 +246,6 @@ const styles = StyleSheet.create({
     contentContainer: {
         paddingHorizontal: 15,
         paddingBottom: 20,
-        marginTop: 20,
     },
     scholarshipContainer: {
         backgroundColor: '#E6D3A3',

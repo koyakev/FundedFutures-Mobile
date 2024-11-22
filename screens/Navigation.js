@@ -22,6 +22,18 @@ export default function Navigation({ navigation, id}) {
         navigation.goBack();
         navigation.navigate('Messages', { id: id });
     }
+
+    const logout = () => {
+        Alert.alert("Logout User?", "", [
+            {
+                text: "Logout",
+                onPress: () => navigation.popToTop()
+            },
+            {
+                text: "Cancel",
+            }
+        ])
+    }
     
     const send = async () => {
         try {
@@ -105,7 +117,7 @@ export default function Navigation({ navigation, id}) {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    onPress={() => navigation.popToTop()}
+                    onPress={logout}
                 >
                     <AntDesign name="logout" size={30} color="red" />
                 </TouchableOpacity>
@@ -158,13 +170,20 @@ export default function Navigation({ navigation, id}) {
 
                         </View>
                         {!sending ? (
-                        <TouchableOpacity
-                            style={styles.button}
-                            onPress={send}
-                        >
-                            <Text style={styles.buttonText}>Send Feedback</Text>
-                        </TouchableOpacity>
-
+                            <View style={styles.modalButtons}>
+                                <TouchableOpacity
+                                    style={styles.button}
+                                    onPress={send}
+                                    >
+                                    <Text style={styles.buttonText}>Send Feedback</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.close}
+                                    onPress={() => setVisible(false)}
+                                >
+                                    <Text style={styles.closeText}>Close</Text>
+                                </TouchableOpacity>
+                            </View>
                         ) : (
                             <View style={styles.button}>
                                 <Text style={styles.buttonText}>Sending...</Text>
@@ -265,11 +284,25 @@ const styles = StyleSheet.create({
     button: {
         backgroundColor: '#007BFF',
         borderRadius: 8,
-        paddingVertical: 10,
-        paddingHorizontal: 20,
+        padding: 10,
+        marginTop: 10,
     },
     buttonText: {
         color: '#FFF',
+        fontWeight: 'bold',
+    },
+    modalButtons: {
+        alignItems: 'space-evenly',
+        justifyContent: 'space-evenly',
+        width: '100%',
+    },
+    close: {
+        backgroundColor: 'lightgray',
+        borderRadius: 8,
+        padding: 10,
+        marginTop: 10
+    },
+    closeText: {
         fontWeight: 'bold',
     }
 })
