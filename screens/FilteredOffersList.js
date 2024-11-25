@@ -56,7 +56,6 @@ export default function FilteredOffersList ({ navigation, route }) {
             })
         }
         runQuery();
-        
     }, [offers, user.schools]);
 
     
@@ -197,7 +196,11 @@ export default function FilteredOffersList ({ navigation, route }) {
                                     </View>
                                     <TouchableOpacity
                                         onPress={() => {
-                                            navigation.navigate('ScholarshipDetails', { id: id, offerId: offer.id, valid: true })
+                                            if(offer.applied < offer.slots) {
+                                                navigation.navigate('ScholarshipDetails', { id: id, offerId: offer.id, valid: true })
+                                            } else {
+                                                navigation.navigate('ScholarshipDetails', { id: id, offerId: offer.id, valid: false })
+                                            }
                                         }}
                                         style={styles.arrowButton}
                                     >
